@@ -1,0 +1,19 @@
+<html>
+  <body>
+    <p>
+    <a id="badpdf" href="badpdf.pdf">This outside-content should be ignored entirely</a><br>
+    <span id="content">
+    <a id="preserved" href="preserved.mp3" preserve>This link should be preserved as-is</a><br>
+    <a id="email" href="mailto:no@no.no">This email link should be unchanged</a><br>
+    <a id="javascript" href="javascript:console.log('ok')">This javascript link should be preserved</a><br>
+    <a id="anchor" href="#anchor">This anchor shoould be preserved</a><br>
+    <a id="offsite" href="https://httpbin.org/get">This offite link should be globed</a><br>
+    <a id="onsite" href="html.html">This onsite link should be ... what?</a><br>
+    <a id="pdf" href="pdf.pdf">This PDF link should be downloaded and modified</a><br>
+    <a id="pdf2" href="pdf.pdf">This PDF link should be identical URL to the previous</a><br>
+
+    <img id="jpeg" src="jpeg.jpeg">This JPEG should be downloaded<br>
+    </span>
+
+    </p>
+

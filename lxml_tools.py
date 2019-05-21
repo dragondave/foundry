@@ -13,7 +13,7 @@ def absolve(root, url):
             if tag.attrib[attr].startswith("#"):
                 continue
             tag.attrib[attr] = urljoin(url, tag.attrib[attr])
-            
+
 def handle_youtube(tag):
     return "PLACEHOLDER -- WILL BE FILENAME"
 
@@ -26,7 +26,7 @@ def globalise(tag):
         tag.tag = "span"
     text = tag.text or ""
     tag.text = GLOBE + " " + text
-            
+
 def global_hyperlink(root):
     """
     Problem: Offsite links won't resolve, and it's ugly to put full hyperlinks everywhere in the main text.
@@ -38,7 +38,9 @@ def global_hyperlink(root):
     hyper = root.xpath("//a[@href]")
     for a in hyper:
         if a.attrib['href'].startswith("#"): # local anchorlink
-            continue 
+            continue
+        if a.text.starts_with(GLOBE): # don't double globe
+            continue
         if not a.text_content().strip(): # no text in link -- delink
             a.tag = "span" # TODO confirm correct
             continue
@@ -46,4 +48,4 @@ def global_hyperlink(root):
             a.text = GLOBE + " " + a.text
         else:
             a.text = GLOBE + " "
-        
+

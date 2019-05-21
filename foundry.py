@@ -73,6 +73,7 @@ class Foundry(object):
         self.centrifuged = lxml.html.tostring(new_root)
 
     def alloy(self):
+        """Modify the relevant HTML to create a structure suitable for becoming a HTML5App"""
         root = lxml.html.fromstring(self.centrifuged)
         handled = {} # {url:filename}
         for attr in URL_ATTRS:
@@ -84,6 +85,7 @@ class Foundry(object):
                     continue
                 for starter in ["#", "mailto:", "javascript:"]:
                     if attribute_value.startswith(starter):
+                        print ("STARTER", starter)
                         continue
 
                 # MODIFICATION: Tag is now absolute
@@ -110,6 +112,8 @@ class Foundry(object):
                 # We now have a resource (specifically: request response) we must save.
                 content_type = response.headers['Content-Type'].split(";")[0].strip()
                 extension = mimetypes.guess_extension(content_type) or "" # .mp3
+                if extension == ".mp2":
+                    extension = ".mp3"
                 filename = hashlib.sha1(attribute_value.encode('utf-8')).hexdigest() + extension
 
 
