@@ -113,9 +113,14 @@ class Foundry(object):
                     continue
                 for starter in ["#", "mailto:", "javascript:"]:
                     if attribute_value.startswith(starter):
+<<<<<<< HEAD
                         debug("STARTER", starter)
                         bail = True
                 if bail: continue
+=======
+                        print ("STARTER", starter)
+                        continue
+>>>>>>> Tests
 
                 # MODIFICATION: Tag is now absolute
                 tag.attrib[attr] = urljoin(self.url, tag.attrib[attr])
@@ -146,10 +151,20 @@ class Foundry(object):
                     continue # bail out either way.
 
                 # We now have a resource (specifically: request response) we must save.
+<<<<<<< HEAD
                 extension = nice_ext(response)
                 filename = hashlib.sha1(absolute_value.encode('utf-8')).hexdigest() + extension
                 self.files[absolute_value] = filename
                 tag.attrib[attr] = filename
+=======
+                content_type = response.headers['Content-Type'].split(";")[0].strip()
+                extension = mimetypes.guess_extension(content_type) or "" # .mp3
+                if extension == ".mp2":
+                    extension = ".mp3"
+                filename = hashlib.sha1(attribute_value.encode('utf-8')).hexdigest() + extension
+
+
+>>>>>>> Tests
         self.alloyed = lxml.html.tostring(root)
         return self.alloyed
 
