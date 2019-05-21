@@ -1,6 +1,7 @@
 from urllib.parse import urljoin
 PRESERVE = "preserve"      # attribute on a tag which is not to be changed
 URL_TAGS = ["src", "href"] # tag attributes that might be URLs
+GLOBE = u"\U0001F310"
 
 def absolve(root, url):
     "Modifies an lxml tree to make all links absolute, except those marked with PRESERVE and local #"
@@ -34,7 +35,6 @@ def global_hyperlink(root):
     Additional Problem: may be ugly for images -- so we check there's text first.
     Further Problem: Some of these links might be to PDF documents, etc: check mimetype of target first, TODO
     """
-    GLOBE = u"\U0001F310"
     hyper = root.xpath("//a[@href]")
     for a in hyper:
         if a.attrib['href'].startswith("#"): # local anchorlink
@@ -45,7 +45,7 @@ def global_hyperlink(root):
             a.tag = "span" # TODO confirm correct
             continue
         if a.text:
-            a.text = GLOBE + " " + a.text
+            a.begin = GLOBE + " " + a.text
         else:
-            a.text = GLOBE + " "
+            a.begin = GLOBE + " "
 

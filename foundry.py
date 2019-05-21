@@ -12,6 +12,11 @@ from urllib.parse import urljoin, urlparse
 from lxml_tools import global_hyperlink, absolve, handle_youtube, globalise
 from bits import get_resource
 
+DEBUG = True
+def debug(*s):
+    if DEBUG:
+        print(*s)
+
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -81,21 +86,27 @@ class Foundry(object):
             for tag in tags:
                 bail = False
                 attribute_value = tag.attrib[attr]
-                print ("TAG ATTR:", attribute_value)
+                debug("TAG ATTR:", attribute_value)
                 # ignore certain tags
                 if PRESERVE in tag.attrib:
                     continue
                 for starter in ["#", "mailto:", "javascript:"]:
                     if attribute_value.startswith(starter):
-                        print ("STARTER", starter)
+                        debug("STARTER", starter)
                         bail = True
                 if bail: continue
 
                 # MODIFICATION: Tag is now absolute
                 tag.attrib[attr] = urljoin(self.url, tag.attrib[attr])
+                absolute_value = tag.attrib[attr]
 
+                tag_domain = urlparse(absolute_value).netloc # www.youtube.com
 
-                if "youtube.com/" in tag.attrib or "youtu.be/" in tag.attrib:
+                if tag_domain not in self.domains and tag.tag=="a":
+                    globalise(tag)
+                    continue
+
+                if "youtube.com" in tag_domain or "youtu.be" in tag_domain:
                     filename = handle_youtube(tag)  # placeholder, do something with file
                     continue
 
@@ -103,13 +114,12 @@ class Foundry(object):
 
                 if attribute_value in handled:
                     # If already handled this URL, rewrite and don't download
-                    tag.attrib[attr] = handled[attribute_value]
+                    tag.attrib[attr] = handled[absolute_value]
                     continue
 
-                response = get_resource(attribute_value)
+                response = get_resource(absolute_value)
                 if response is None:
-                    if tag.tag == "a":
-                        globalise(tag) # give it a pretty globe if it's a link we're not crawling.
+                    print ("Bad link", absolute_value)
                     continue # bail out either way.
 
                 # We now have a resource (specifically: request response) we must save.

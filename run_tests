@@ -1,0 +1,3 @@
+python -m http.server 8000 > serverlog_stdout 2> serverlog_stderr &
+python tests.py
+pkill python
