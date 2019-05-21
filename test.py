@@ -28,8 +28,7 @@ def test_cases():
         server.shutdown()
         raise
 
-t1 = Thread(target=http_server)
+t1 = Thread(target=http_server, name="server")
 t1.start()
-sleep(1)
-t2 = Thread(target=test_cases)
+t2 = Thread(target=test_cases, name="tests")
 t2.start()

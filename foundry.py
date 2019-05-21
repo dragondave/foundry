@@ -79,14 +79,17 @@ class Foundry(object):
         for attr in URL_ATTRS:
             tags = root.xpath("//*[@{}]".format(attr))
             for tag in tags:
+                bail = False
                 attribute_value = tag.attrib[attr]
+                print ("TAG ATTR:", attribute_value)
                 # ignore certain tags
                 if PRESERVE in tag.attrib:
                     continue
                 for starter in ["#", "mailto:", "javascript:"]:
                     if attribute_value.startswith(starter):
                         print ("STARTER", starter)
-                        continue
+                        bail = True
+                if bail: continue
 
                 # MODIFICATION: Tag is now absolute
                 tag.attrib[attr] = urljoin(self.url, tag.attrib[attr])
