@@ -16,7 +16,7 @@ def absolve(root, url):
             tag.attrib[attr] = urljoin(url, tag.attrib[attr])
 
 def handle_youtube(tag):
-    return "PLACEHOLDER -- WILL BE FILENAME"
+    raise NotImplementedError("PLACEHOLDER -- WILL BE FILENAME")
 
 def globalise(tag):
     """

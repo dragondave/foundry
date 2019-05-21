@@ -6,11 +6,10 @@ import requests
 import lxml.html
 import shutil
 import hashlib
-import mimetypes
 
 from urllib.parse import urljoin, urlparse
 from lxml_tools import global_hyperlink, absolve, handle_youtube, globalise
-from bits import get_resource
+from bits import get_resource, nice_ext
 
 DEBUG = True
 def debug(*s):
@@ -20,13 +19,14 @@ def debug(*s):
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-TEMP_FOUNDRY = "__foundry"
+TEMP_FOUNDRY_ZIP = "__foundry/"
 URL_ATTRS = ["src", "href"]
 PRESERVE = "preserve"
 DOMAINS = []
 
 class Foundry(object):
     def __init__(self, url, centrifuge_callback):
+        self.files = {}
         self.url = url
         self.domains = DOMAINS
         self.domains.append(urlparse(self.url).netloc)
@@ -80,13 +80,13 @@ class Foundry(object):
     def alloy(self):
         """Modify the relevant HTML to create a structure suitable for becoming a HTML5App"""
         root = lxml.html.fromstring(self.centrifuged)
-        handled = {} # {url:filename}
         for attr in URL_ATTRS:
             tags = root.xpath("//*[@{}]".format(attr))
             for tag in tags:
                 bail = False
                 attribute_value = tag.attrib[attr]
                 debug("TAG ATTR:", attribute_value)
+
                 # ignore certain tags
                 if PRESERVE in tag.attrib:
                     continue
@@ -99,37 +99,36 @@ class Foundry(object):
                 # MODIFICATION: Tag is now absolute
                 tag.attrib[attr] = urljoin(self.url, tag.attrib[attr])
                 absolute_value = tag.attrib[attr]
-
+                del attribute_value  # don't use relative URL again
                 tag_domain = urlparse(absolute_value).netloc # www.youtube.com
+
+                # handle offsite links: youtube, others
+                if "youtube.com" in tag_domain or "youtu.be" in tag_domain:
+                    filename = handle_youtube(tag)  # placeholder, do something with file
+                    continue
 
                 if tag_domain not in self.domains and tag.tag=="a":
                     globalise(tag)
                     continue
 
-                if "youtube.com" in tag_domain or "youtu.be" in tag_domain:
-                    filename = handle_youtube(tag)  # placeholder, do something with file
-                    continue
-
                 # TODO: handle links which are indirectly resources with a callback here.
+                # TODO: correctly handle HTML resources ... somehow!
 
-                if attribute_value in handled:
+                if absolute_value in self.files:
                     # If already handled this URL, rewrite and don't download
-                    tag.attrib[attr] = handled[absolute_value]
+                    tag.attrib[attr] = self.files[absolute_value]
                     continue
 
                 response = get_resource(absolute_value)
                 if response is None:
-                    print ("Bad link", absolute_value)
+                    debug("Bad link", absolute_value)
                     continue # bail out either way.
 
                 # We now have a resource (specifically: request response) we must save.
-                content_type = response.headers['Content-Type'].split(";")[0].strip()
-                extension = mimetypes.guess_extension(content_type) or "" # .mp3
-                if extension == ".mp2":
-                    extension = ".mp3"
-                filename = hashlib.sha1(attribute_value.encode('utf-8')).hexdigest() + extension
-
-
+                extension = nice_ext(response)
+                filename = hashlib.sha1(absolute_value.encode('utf-8')).hexdigest() + extension
+                self.files[absolute_value] = filename
+                tag.attrib[attr] = filename
         self.alloyed = lxml.html.tostring(root)
         return self.alloyed
 
