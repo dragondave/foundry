@@ -6,12 +6,18 @@ import requests
 import lxml.html
 import shutil
 import hashlib
+import os
 
 from urllib.parse import urljoin, urlparse
+from pathlib import Path
+import shutil
 from lxml_tools import global_hyperlink, absolve, handle_youtube, globalise
 from bits import get_resource, nice_ext
-
-DEBUG = True
+from ricecooker.utils.downloader import read as Downloader
+from ricecooker.utils.zip import create_predictable_zip
+from ricecooker.classes.nodes import HTML5AppNode
+from ricecooker.classes.files import HTMLZipFile
+DEBUG = False
 def debug(*s):
     if DEBUG:
         print(*s)
@@ -19,13 +25,16 @@ def debug(*s):
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-TEMP_FOUNDRY_ZIP = "__foundry/"
+TEMP_FOUNDRY_ZIP = Path("__foundry/")
 URL_ATTRS = ["src", "href"]
 PRESERVE = "preserve"
 DOMAINS = []
+CSS = "styles.css"
 
 class Foundry(object):
-    def __init__(self, url, centrifuge_callback):
+    def __init__(self, url, centrifuge_callback, metadata=None):
+        self.metadata = metadata or {}
+        self.license = "Public Domain" # TODO
         self.files = {}
         self.url = url
         self.domains = DOMAINS
@@ -34,6 +43,8 @@ class Foundry(object):
         assert type(self.raw_content) == bytes
         self.centrifuge(centrifuge_callback)
         assert type(self.centrifuged) == bytes
+        self.alloy()
+        self.cast()
 
     def melt(self):
         """
@@ -71,7 +82,7 @@ class Foundry(object):
         assert callback, "callback is required"
         root = lxml.html.fromstring(self.raw_content)
         main = callback(root)
-        new_root = lxml.html.fromstring('<html><head><meta charset="UTF-8"><link rel="stylesheet" type="text/css" href="styles.css" preserve=true></head><body></body></html>') # PRESERVE
+        new_root = lxml.html.fromstring('<html><head><meta charset="UTF-8"><link rel="stylesheet" type="text/css" href="{}" preserve=true></head><body></body></html>'.format(CSS))
         body, = new_root.xpath("//body")
         body.append(main)
         absolve(body, self.url)
@@ -132,6 +143,57 @@ class Foundry(object):
         self.alloyed = lxml.html.tostring(root)
         return self.alloyed
 
+    def title(self):
+        "a stab at getting the title -- probably to be overwritten"
+        root = lxml.html.fromstring(self.centrifuged)
+        try:
+            h1, = root.xpath("//h1")
+        except ValueError:
+            return "Placeholder"
+        return h1.text_content().strip()
+
+    def thumb(self):
+        "a stab at getting the thumbnail -- probably to be overwritten"
+        root = lxml.html.fromstring(self.centrifuged)
+        root.make_links_absolute(self.url)
+        srcs = root.xpath("//img/@src")
+        try:
+            src = srcs[0]
+        except IndexError:
+            return None
+        return src
+
+    def cast(self):
+        """
+        Create a zip file containing:
+            * index.html = self.alloyed
+            * files from self.files (urls)
+            * static files from disk [i.e. css]
+        """
+        assert "__" in str(TEMP_FOUNDRY_ZIP)
+        try:
+            shutil.rmtree(TEMP_FOUNDRY_ZIP)
+        except FileNotFoundError:
+            pass
+        os.mkdir(TEMP_FOUNDRY_ZIP)
+        with open(TEMP_FOUNDRY_ZIP / "index.html", "wb") as f:
+            f.write(self.alloyed)
+        shutil.copyfile(CSS, TEMP_FOUNDRY_ZIP / CSS)
+        for url, filename in self.files.items():
+            data = Downloader(url)
+            with open(TEMP_FOUNDRY_ZIP / filename, "wb") as f:
+                f.write(data)
+        self.zipname = create_predictable_zip(str(TEMP_FOUNDRY_ZIP))
+
+    def node(self):
+        return HTML5AppNode(
+                source_id=self.url,
+                title=self.title(),
+                license=self.license,
+                thumbnail=self.thumb(),
+                files = [HTMLZipFile(self.zipname)],
+                **self.metadata
+               )
 
 def wiki_xpath(root):
     content, = root.xpath("//div[@id='content']")
@@ -147,5 +209,5 @@ if __name__ == "__main__":
     f = Foundry("https://www.mathplanet.com/education/pre-algebra/graphing-and-functions/graphing-linear-inequalities",
                 mathplanet_xpath)
 
-    print (f.alloy())
+    print (f.alloyed)
 
