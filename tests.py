@@ -30,12 +30,14 @@ assert GLOBE in foundry_root.xpath(".//*[@id='offsite']/text()")[0]
 assert "/" not in href("pdf")
 assert href("pdf") == href("pdf2")
 assert "/" not in src("jpeg")
+assert "/" not in src("youtube"), src("youtube")
+
 assert src("jpeg") in f.files.values()
 assert href("pdf") in f.files.values()
+assert src("youtube") in f.files.values()
 # onsite TODO
 
 #print (f.alloy())
 #zipout = f.cast()
 node = f.node()
 assert node.title == "h1 title"
-

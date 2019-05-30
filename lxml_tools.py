@@ -1,4 +1,6 @@
 from urllib.parse import urljoin
+from youtube_dl import YoutubeDL
+import lxml.html
 PRESERVE = "preserve"      # attribute on a tag which is not to be changed
 URL_TAGS = ["src", "href"] # tag attributes that might be URLs
 GLOBE = u"\U0001F310"
@@ -16,7 +18,14 @@ def absolve(root, url):
             tag.attrib[attr] = urljoin(url, tag.attrib[attr])
 
 def handle_youtube(tag):
-    raise NotImplementedError("PLACEHOLDER -- WILL BE FILENAME")
+    attr, = [attr for attr in URL_TAGS if 'youtu' in tag.attrib.get(attr, "")]
+    url = tag.attrib[attr]
+    ydl_opts = {"quiet": True}
+    with YoutubeDL(ydl_opts) as ydl:
+        filename = ydl.download([url])
+    print (repr(filename), attr)
+    tag.attrib[attr] = filename
+    return filename
 
 def globalise(tag):
     """

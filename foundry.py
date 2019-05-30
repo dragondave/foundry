@@ -11,12 +11,13 @@ import os
 from urllib.parse import urljoin, urlparse
 from pathlib import Path
 import shutil
-from lxml_tools import global_hyperlink, absolve, handle_youtube, globalise
-from bits import get_resource, nice_ext
+from .lxml_tools import global_hyperlink, absolve, handle_youtube, globalise
+from .bits import get_resource, nice_ext
 from ricecooker.utils.downloader import read as Downloader
 from ricecooker.utils.zip import create_predictable_zip
 from ricecooker.classes.nodes import HTML5AppNode
 from ricecooker.classes.files import HTMLZipFile
+
 DEBUG = False
 def debug(*s):
     if DEBUG:
@@ -29,7 +30,9 @@ TEMP_FOUNDRY_ZIP = Path("__foundry/")
 URL_ATTRS = ["src", "href"]
 PRESERVE = "preserve"
 DOMAINS = []
-CSS = "styles.css"
+PACKAGE_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
+CSS_FILENAME = "styles.css"
+CSS_PATH = PACKAGE_PATH / CSS_FILENAME
 
 class Foundry(object):
     def __init__(self, url, centrifuge_callback, metadata=None):
@@ -82,7 +85,7 @@ class Foundry(object):
         assert callback, "callback is required"
         root = lxml.html.fromstring(self.raw_content)
         main = callback(root)
-        new_root = lxml.html.fromstring('<html><head><meta charset="UTF-8"><link rel="stylesheet" type="text/css" href="{}" preserve=true></head><body></body></html>'.format(CSS))
+        new_root = lxml.html.fromstring('<html><head><meta charset="UTF-8"><link rel="stylesheet" type="text/css" href="{}" preserve=true></head><body></body></html>'.format(CSS_PATH))
         body, = new_root.xpath("//body")
         body.append(main)
         absolve(body, self.url)
@@ -178,7 +181,7 @@ class Foundry(object):
         os.mkdir(TEMP_FOUNDRY_ZIP)
         with open(TEMP_FOUNDRY_ZIP / "index.html", "wb") as f:
             f.write(self.alloyed)
-        shutil.copyfile(CSS, TEMP_FOUNDRY_ZIP / CSS)
+        shutil.copyfile(CSS_PATH, TEMP_FOUNDRY_ZIP / CSS_FILENAME)
         for url, filename in self.files.items():
             data = Downloader(url)
             with open(TEMP_FOUNDRY_ZIP / filename, "wb") as f:
