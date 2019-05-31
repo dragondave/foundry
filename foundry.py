@@ -18,7 +18,7 @@ from ricecooker.utils.zip import create_predictable_zip
 from ricecooker.classes.nodes import HTML5AppNode
 from ricecooker.classes.files import HTMLZipFile
 
-DEBUG = True
+DEBUG = False
 def debug(*s):
     if DEBUG:
         print(*s)
@@ -34,10 +34,11 @@ PACKAGE_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 CSS_FILENAME = "styles.css"
 CSS_PATH = PACKAGE_PATH / CSS_FILENAME
 
+copyright_holder = None
+
 class Foundry(object):
     def __init__(self, url, centrifuge_callback=None, metadata=None):
         self.metadata = metadata or {}
-        self.license = "Public Domain" # TODO
         self.files = {}
         self.url = url
         self.domains = DOMAINS
@@ -48,6 +49,9 @@ class Foundry(object):
         assert type(self.centrifuged) == bytes
         self.alloy()
         self.cast()
+
+    def get_license(self):
+        return "Public Domain"  # TODO
 
     def melt(self):
         """
@@ -194,7 +198,8 @@ class Foundry(object):
         return HTML5AppNode(
                 source_id=self.url,
                 title=self.title(),
-                license=self.license,
+                license=self.license(),
+                copyright_holder=copyright_holder,
                 thumbnail=self.thumb(),
                 files = [HTMLZipFile(self.zipname)],
                 **self.metadata
