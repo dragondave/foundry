@@ -18,7 +18,7 @@ from ricecooker.utils.zip import create_predictable_zip
 from ricecooker.classes.nodes import HTML5AppNode
 from ricecooker.classes.files import HTMLZipFile
 
-DEBUG = False
+DEBUG = True
 def debug(*s):
     if DEBUG:
         print(*s)
@@ -35,7 +35,7 @@ CSS_FILENAME = "styles.css"
 CSS_PATH = PACKAGE_PATH / CSS_FILENAME
 
 class Foundry(object):
-    def __init__(self, url, centrifuge_callback, metadata=None):
+    def __init__(self, url, centrifuge_callback=None, metadata=None):
         self.metadata = metadata or {}
         self.license = "Public Domain" # TODO
         self.files = {}
@@ -94,6 +94,8 @@ class Foundry(object):
     def alloy(self):
         """Modify the relevant HTML to create a structure suitable for becoming a HTML5App"""
         root = lxml.html.fromstring(self.centrifuged)
+        debug("alloying")
+
         for attr in URL_ATTRS:
             tags = root.xpath("//*[@{}]".format(attr))
             for tag in tags:
