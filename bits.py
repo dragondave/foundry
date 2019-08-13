@@ -23,6 +23,8 @@ def get_resource(url):
         r = requests.get(url, verify=False)
     except requests.exceptions.InvalidURL:
         return None
+    except requests.exceptions.ConnectionError:
+        return None
     try:
         content_type = r.headers['Content-Type'].split(";")[0].strip()
     except KeyError:
