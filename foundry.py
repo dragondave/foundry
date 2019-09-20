@@ -37,12 +37,13 @@ CSS_PATH = PACKAGE_PATH / CSS_FILENAME
 copyright_holder = None
 
 class Foundry(object):
-    def __init__(self, url, centrifuge_callback=None, metadata=None):
+    def __init__(self, url, centrifuge_callback=None, metadata=None, owndomain=True):
         self.metadata = metadata or {}
         self.files = {}
         self.url = url
         self.domains = DOMAINS
-        self.domains.append(urlparse(self.url).netloc)
+        if owndomain:
+            self.domains.append(urlparse(self.url).netloc)
         self.melt() # self.content
         assert type(self.raw_content) == bytes
         self.centrifuge(centrifuge_callback)
@@ -198,7 +199,7 @@ class Foundry(object):
         return HTML5AppNode(
                 source_id=self.url,
                 title=self.title(),
-                license=self.license(),
+                license=self.get_license(),
                 copyright_holder=copyright_holder,
                 thumbnail=self.thumb(),
                 files = [HTMLZipFile(self.zipname)],
