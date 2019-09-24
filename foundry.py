@@ -39,10 +39,6 @@ copyright_holder = None
 class Foundry(object):
     def __init__(self, url, centrifuge_callback=None, metadata=None, owndomain=True):
         self.metadata = metadata or {}
-
-    def license(self):
-        return "Public Domain" # TODO
-
         self.files = {}
         self.url = url
         self.domains = DOMAINS
