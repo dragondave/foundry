@@ -37,8 +37,18 @@ CSS_PATH = PACKAGE_PATH / CSS_FILENAME
 copyright_holder = None
 
 class Foundry(object):
+<<<<<<< HEAD
     def __init__(self, url, centrifuge_callback=None, metadata=None, owndomain=True):
         self.metadata = metadata or {}
+=======
+
+    def license(self):
+        return "Public Domain" # TODO
+
+    def __init__(self, url, centrifuge_callback=None, metadata=None):
+        self.metadata = metadata or {}
+        #self.license = "Public Domain" # TODO
+>>>>>>> Add new step before ZIP file actually created
         self.files = {}
         self.url = url
         self.domains = DOMAINS
@@ -50,6 +60,8 @@ class Foundry(object):
         assert type(self.centrifuged) == bytes
         self.alloy()
         self.cast()
+        self.etch()
+        self.cool()
 
     def get_license(self):
         return "Public Domain"  # TODO
@@ -190,7 +202,7 @@ class Foundry(object):
 
     def cast(self):
         """
-        Create a zip file containing:
+        Create folder ready to become a zip file containing:
             * index.html = self.alloyed
             * files from self.files (urls)
             * static files from disk [i.e. css]
@@ -208,6 +220,14 @@ class Foundry(object):
             data = Downloader(url)
             with open(TEMP_FOUNDRY_ZIP / filename, "wb") as f:
                 f.write(data)
+
+    def etch(self):
+        """
+        Manipulate contents of proto-zip file in TEMP_FOUNDRY_ZIP
+        """
+        return
+
+    def cool(self):
         self.zipname = create_predictable_zip(str(TEMP_FOUNDRY_ZIP))
 
     def node(self):
