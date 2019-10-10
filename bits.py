@@ -25,6 +25,8 @@ def get_resource(url):
         return None
     except requests.exceptions.ConnectionError:
         return None
+    except requests.exceptions.InvalidSchema:
+        return None
     try:
         content_type = r.headers['Content-Type'].split(";")[0].strip()
     except KeyError:

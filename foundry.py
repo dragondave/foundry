@@ -92,7 +92,7 @@ class Foundry(object):
         assert callback, "callback is required"
         root = lxml.html.fromstring(self.raw_content)
         main = callback(root)
-        new_root = lxml.html.fromstring('<html><head><meta charset="UTF-8"><link rel="stylesheet" type="text/css" href="{}" preserve=true></head><body></body></html>'.format(CSS_PATH))
+        new_root = lxml.html.fromstring('<html><head><meta charset="UTF-8"><link rel="stylesheet" type="text/css" href="{}" preserve=true></head><body></body></html>'.format(CSS_FILENAME))
         body, = new_root.xpath("//body")
         body.append(main)
         absolve(body, self.url)
@@ -184,16 +184,16 @@ class Foundry(object):
         """
         assert "__" in str(TEMP_FOUNDRY_ZIP)
         try:
-            shutil.rmtree(TEMP_FOUNDRY_ZIP)
+            shutil.rmtree(str(TEMP_FOUNDRY_ZIP))
         except FileNotFoundError:
             pass
-        os.mkdir(TEMP_FOUNDRY_ZIP)
-        with open(TEMP_FOUNDRY_ZIP / "index.html", "wb") as f:
+        os.mkdir(str(TEMP_FOUNDRY_ZIP))
+        with open(str(TEMP_FOUNDRY_ZIP / "index.html"), "wb") as f:
             f.write(self.alloyed)
-        shutil.copyfile(CSS_PATH, TEMP_FOUNDRY_ZIP / CSS_FILENAME)
+        shutil.copyfile(str(CSS_PATH), str(TEMP_FOUNDRY_ZIP / CSS_FILENAME))
         for url, filename in self.files.items():
             data = Downloader(url)
-            with open(TEMP_FOUNDRY_ZIP / filename, "wb") as f:
+            with open(str(TEMP_FOUNDRY_ZIP / filename), "wb") as f:
                 f.write(data)
 
     def etch(self):
