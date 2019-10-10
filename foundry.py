@@ -37,8 +37,9 @@ CSS_PATH = PACKAGE_PATH / CSS_FILENAME
 copyright_holder = None
 
 class Foundry(object):
-    def __init__(self, url, centrifuge_callback=None, metadata=None, owndomain=True):
+    def __init__(self, url, centrifuge_callback=None, metadata=None, owndomain=True, params=None):
         self.metadata = metadata or {}
+        self.params = params or {}
         self.files = {}
         self.url = url
         self.domains = DOMAINS
